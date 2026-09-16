@@ -1,0 +1,348 @@
+// اسکیمای Prisma — بر اساس داده واقعی endpoint های yakkalab.jp (فایل lab-endpoint.txt)
+// هر مدل و فیلد مستقیماً از پاسخ‌های JSON واقعی استخراج شده تا با API واقعی هم‌خوان باشد.
+//
+// راهنما:
+//   npx prisma migrate dev --name init
+//   npx tsx prisma/seed.ts
+//
+// نکته لوکالایزیشن: نام‌های اصلی دارو/ماده مؤثره/سازنده داده رسمی ژاپنی هستند (نمی‌توان
+// آن‌ها را من‌درآوردی فارسی کرد). فیلدهای *Fa برای ترجمه/تلفظ فارسی نمایشی اضافه شده‌اند
+// و در فاز بعدی (دستی یا با کمک AI) پر می‌شوند؛ تا آن زمان UI می‌تواند از nameFa ?? name استفاده کند.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// طبقه‌بندی اثر دارویی (پارامتر /api/category/{code}) — کارت‌های section6 صفحه خانه
+// ---------------------------------------------------------------------------
+model Category {
+  id          String       @id @default(cuid())
+  code        String       @unique // شناسه عددی طبقه‌بندی طبق YJ code، مثل "2144"
+  slug        String       @unique // برای مسیر /category/[slug]
+  name        String // نام اصلی (ژاپنی/رسمی)
+  nameFa      String? // ترجمه فارسی نمایشی
+  description String?
+  ingredients Ingredient[]
+  drugs       Drug[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("categories")
+}
+
+// ---------------------------------------------------------------------------
+// ماده مؤثره — /api/ingredient/{name} و /api/ingredient/{name}/santei-refs
+// ---------------------------------------------------------------------------
+model Ingredient {
+  id         String       @id @default(cuid())
+  slug       String       @unique
+  name       String       @unique // نام اصلی ماده مؤثره
+  nameFa     String?
+  categoryId String?
+  category   Category?    @relation(fields: [categoryId], references: [id])
+  drugs      Drug[]
+  santeiRefs SanteiRef[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([categoryId])
+  @@map("ingredients")
+}
+
+// مبانی محاسبه (サンテイ) مرتبط با یک ماده مؤثره — /api/ingredient/{name}/santei-refs
+model SanteiRef {
+  id           String     @id @default(cuid())
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  label        String?
+  detail       Json? // ساختار دقیق پاسخ API هنوز کامل مستند نشده؛ فعلاً Json خام نگه می‌داریم
+  createdAt    DateTime   @default(now())
+
+  @@index([ingredientId])
+  @@map("santei_refs")
+}
+
+// ---------------------------------------------------------------------------
+// سازنده / شرکت دارویی — /api/company/{name} و /api/companies
+// ---------------------------------------------------------------------------
+model Manufacturer {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String   @unique
+  nameFa    String?
+  drugs     Drug[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // نکته: brand_count / generic_count / premium_count / unprofitable_count / basic_count
+  // و total که در /api/companies دیده می‌شوند، STORE نمی‌شوند — این‌ها aggregate هستند و
+  // باید با یک کوئری Prisma groupBy روی جدول Drug محاسبه شوند تا هرگز desync نشوند:
+  //
+  //   prisma.drug.groupBy({
+  //     by: ["manufacturerId"],
+  //     where: { isActive: true },
+  //     _count: { _all: true },
+  //   })
+  //
+  // برای دیتاست ۱۲هزار+ قلمی، در صورت نیاز به سرعت بیشتر می‌توان یک PostgreSQL
+  // materialized view (مثلاً manufacturer_stats) روی همین کوئری ساخت و دوره‌ای REFRESH کرد.
+
+  @@map("manufacturers")
+}
+
+// ---------------------------------------------------------------------------
+// enum ها — بر اساس مقادیر واقعی دیده‌شده در drug_type و category (مسیر دارو)
+// ---------------------------------------------------------------------------
+enum DrugType {
+  ORIGINATOR // 先発品
+  GENERIC // 後発品
+  OTHER
+
+  @@map("drug_type")
+}
+
+enum DrugRoute {
+  ORAL // 内用薬
+  TOPICAL // 外用薬
+  INJECTION // 注射薬
+  OTHER
+
+  @@map("drug_route")
+}
+
+// ---------------------------------------------------------------------------
+// دارو (یک قلم با کد YJ) — /api/drugs/{yj_code} و بخش‌های مرتبط
+// ---------------------------------------------------------------------------
+model Drug {
+  id     String @id @default(cuid())
+  slug   String @unique
+  yjCode String @unique // کد YJ ۱۲ تا ۱۴ رقمی وزارت بهداشت
+
+  name   String // drug_name (نام اصلی/ژاپنی)
+  nameFa String?
+  spec   String // spec — مشخصات دوز/بسته‌بندی، مثل "100mg1個"
+
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+
+  manufacturerId String
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
+
+  categoryId String? // طبقه‌بندی اثر دارویی (therapeutic classification)
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  drugType  DrugType // drug_type: 先発品 / 後発品
+  route     DrugRoute? // category در پاسخ /api/drugs/{yj_code}: 内用薬 / 外用薬 / 注射薬
+  narcotic  Boolean    @default(false) // مخدر/کنترل‌شده
+
+  price     Decimal  @db.Decimal(14, 2) // قیمت فعلی
+  prevPrice Decimal? @db.Decimal(14, 2) // prev_price
+
+  hasGeAlt         Boolean  @default(false) // has_ge_alt: معادل ژنریک دارد
+  isActive         Boolean  @default(true)
+  newDrugPremium   Boolean  @default(false)
+  premiumType      String? // premium_type، مثلاً "維持"
+  unprofitableDrug Boolean  @default(false)
+  basicMedicine    Boolean  @default(false)
+  basicMedicineType String?
+
+  pmdaPdfUrl String? // لینک بروشور PMDA
+
+  listingDate         DateTime? // تاریخ فهرست‌شدن
+  earliestRevisionDate DateTime?
+  revisionDate         String? // آخرین بازنگری اعمال‌شده، مثل "2026-05"
+  prevRevisionDate     String?
+  listedYears          Float?
+
+  gracePeriod          String? // grace_period — دوره اقدامات انتقالی
+  stableSupplyCategory String? // stable_supply_category
+  supplyStatus         String? // supply_status
+
+  indication String? // موارد مصرف خلاصه (indication)
+  hta        String? // نتیجه ارزیابی هزینه-اثربخشی (HTA)، در صورت وجود
+  reexam     String? // وضعیت بازبینی/تأیید مجدد (再審査)
+
+  // گروه‌بندی نام یکپارچه (統一名) هنگام ادغام چند ژنریک هم‌ارز به یک ردیف قیمتی
+  touitsuCurrent String?
+  touitsuMembers Json? // فهرست اعضای گروه یکپارچه‌شده، در صورت وجود
+
+  fusansanDates String[] // تاریخ‌های اعمال «بازنگری قلم زیان‌ده» (不採算算定)
+  pmpHistory    Json? // رویدادهای دوره PMP (حمایت داروی نوآورانه)
+  pmpSummary    Json? // خلاصه وضعیت PMP: status/as_of/cap_date/years[]/...
+  outlook       Json? // چشم‌انداز بازنگری بعدی: {cat, label, note} — از /outlook
+
+  priceRevisions PriceRevision[]
+  similarOf      SimilarDrug[]    @relation("SimilarSource")
+  similarTo      SimilarDrug[]    @relation("SimilarTarget")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ingredientId])
+  @@index([manufacturerId])
+  @@index([categoryId])
+  @@index([isActive])
+  @@map("drugs")
+}
+
+// دارویی مشابه/جایگزین جهت محاسبه قیمت (santei_comparator) — /api/drugs/{yj_code}/similar
+model SimilarDrug {
+  id             String   @id @default(cuid())
+  sourceDrugId   String
+  sourceDrug     Drug     @relation("SimilarSource", fields: [sourceDrugId], references: [id])
+  targetDrugId   String
+  targetDrug     Drug     @relation("SimilarTarget", fields: [targetDrugId], references: [id])
+  calcMethod     String? // calc_method
+  santeiComparator String? // santei_comparator
+  createdAt      DateTime @default(now())
+
+  @@unique([sourceDrugId, targetDrugId])
+  @@map("similar_drugs")
+}
+
+// ---------------------------------------------------------------------------
+// تاریخچه بازنگری قیمت هر دارو — /api/drugs/{yj_code}/price-history
+// ---------------------------------------------------------------------------
+model PriceRevision {
+  id     String @id @default(cuid())
+  drugId String
+  drug   Drug   @relation(fields: [drugId], references: [id])
+
+  revisionDate String // "YYYY-MM"، طبق ماهانه/دوره‌ای بودن بازنگری‌ها در منبع رسمی
+  price        Decimal @db.Decimal(14, 2)
+  isRevised    Boolean @default(false)
+  isFusansan   Boolean @default(false) // بازنگری قلم زیان‌ده (不採算算定) در این دوره اعمال شده
+
+  reasonLayer     String?
+  reasonMechanism String? // مثل «市場拡大再算定» (بازمحاسبه گسترش بازار)
+  reasonCitation  String? // ارجاع قانونی، مثل «第3章第1節»
+  reasonDetail    String?
+
+  midyearAppliedYm String? // اگر در بازنگری سال میانی اعمال شده
+  midyearKind      String?
+  midyearRef       String?
+
+  pmpStatus      String?
+  pmpReason      String?
+  pmpReasonLayer String?
+  pmpEvent       String?
+
+  listing      String?
+  touitsuYj    String?
+  touitsuName  String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([drugId, revisionDate])
+  @@index([drugId])
+  @@map("price_revisions")
+}
+
+// ---------------------------------------------------------------------------
+// عکس لحظه‌ای هر رویداد بازنگری قیمت (کل بازار) — /api/revision/{date}
+// ---------------------------------------------------------------------------
+model MarketRevision {
+  id           String   @id @default(cuid())
+  revisionDate String   @unique // "YYYY-MM"
+  prevDate     String?
+  nextDate     String?
+  isAdhoc      Boolean  @default(false) // بازنگری موردی/فوق‌العاده در برابر بازنگری منظم
+
+  totalItems  Int
+  prevTotal   Int?
+  avgChangePct Decimal? @db.Decimal(6, 2)
+
+  statsDecreased Int @default(0)
+  statsIncreased Int @default(0)
+  statsUnchanged Int @default(0)
+  statsNew       Int @default(0)
+  statsRemoved   Int @default(0)
+  karteTotal     Int @default(0)
+
+  // مکانیزم‌های اعمال‌شده در این بازنگری (کارت‌های «چرا قیمت این دارو تغییر کرد»)
+  // هر آیتم: { mechanism, layer, count, pct, anchor, examples: [{yj_code, drug_name}] }
+  karte Json
+
+  // آرایه‌های خام تغییرات برای نمایش لیست‌های «بیشترین کاهش/افزایش/جدید/حذف‌شده»
+  // (ارجاع سبک به yj_code به‌جای FK سخت، چون ممکن است دارو بعداً حذف/غیرفعال شود)
+  topDecreases Json
+  topIncreases Json
+  newItems     Json
+  removedItems Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("market_revisions")
+}
+
+// ---------------------------------------------------------------------------
+// نام‌های حذف‌شده از فهرست (delisted) — /api/deletions/check?names=...
+// ---------------------------------------------------------------------------
+model DelistedName {
+  id             String    @id @default(cuid())
+  name           String    @unique
+  isDeleted      Boolean   @default(true)
+  delistedDate   DateTime?
+  replacedByYjCode String?
+  createdAt      DateTime  @default(now())
+
+  @@map("delisted_names")
+}
+
+// ---------------------------------------------------------------------------
+// مقالات/گزارش‌ها — /api/insights (بخش «مطالعه» در ناوبری)
+// ---------------------------------------------------------------------------
+model Insight {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  keywords    String?
+  category    String?
+  status      String   @default("draft") // "published" | "draft"
+  date        DateTime
+  readMin     Int?
+  featured    Boolean  @default(false)
+  author      String?
+  ogpImage    String?
+
+  statValue   String?
+  statLabel   String?
+  series      String?
+  seriesOrder Int?
+  lead        String?
+  weeklyViews Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("insights")
+}
+
+// ---------------------------------------------------------------------------
+// شبیه‌سازی قیمت دارو — /api/simulation/guide و /api/simulation/existing
+//
+// این بخش یک موتور قوانین (rule engine) با ~۸۸ فیلد ورودی و ۲۰ بخش قانونی است
+// (فصل ۳، بندهای ۱ تا ۱۲ + قیمت حداقل). به‌جای مدل‌سازی رابطه‌ای همه فیلدها،
+// ورودی/خروجی هر اجرا به‌صورت Json کامل ذخیره می‌شود — هم برای کش کردن نتیجه
+// و هم برای ممیزی (چون قوانین محاسباتی احتمالاً با هر بازنگری واقعی تغییر می‌کنند).
+// منطق محاسبه خودش باید در یک ماژول جدا (مثلاً lib/simulation-engine/) با تایپ‌های
+// دقیق از /api/simulation/guide پیاده‌سازی شود — این یک تسک مجزا از مدل‌سازی دیتابیس است.
+// ---------------------------------------------------------------------------
+model SimulationRun {
+  id        String   @id @default(cuid())
+  yjCode    String? // ممکن است دارو در DB ما نباشد (فرضی/آزمایشی)
+  input     Json // کل payload ورودی (current_price, drug_type, ge_group_*, sec11_*, ...)
+  result    Json // کل پاسخ خروجی (revision_history با trace_steps، eligibility_summary، ...)
+  createdAt DateTime @default(now())
+
+  @@index([yjCode])
+  @@map("simulation_runs")
+}
