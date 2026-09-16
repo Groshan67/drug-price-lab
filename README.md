@@ -1,4 +1,4 @@
-# Drug-Price-Lab (roshan-lab)
+# دارونما (yakka-fa)
 
 نسخه فارسی و راست‌چین پلتفرم قیمت دارو — Next.js 14 + TypeScript + Tailwind + PostgreSQL (Prisma) + Meilisearch.
 
@@ -133,7 +133,7 @@ prisma/
 `prisma/schema.prisma` بازنویسی شد تا دقیقاً با ساختار پاسخ‌های واقعی API مرجع (فایل
 `lab-endpoint.txt` که ارسال کردید) هم‌خوان باشد. تصمیم‌های کلیدی طراحی:
 
-- **`Drug`** حالا فیلدهای واقعی مثل `drugType` (brandedDrug/genericDrugOral)، `route` (medication/topicalMedication/injectableMedication)،
+- **`Drug`** حالا فیلدهای واقعی مثل `drugType` (先発品/後発品)، `route` (内用薬/外用薬/注射薬)،
   `hasGeAlt`، `narcotic`، `gracePeriod`، `fusansanDates`، `pmpSummary`, `pmpHistory`, `outlook`
   و `touitsuCurrent`/`touitsuMembers` (گروه‌بندی نام یکپارچه) را دارد.
 - **`PriceRevision`** حالا `reasonMechanism`, `reasonCitation`, `midyear*`, `pmp*`, `touitsu*`

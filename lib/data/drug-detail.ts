@@ -58,8 +58,12 @@ export type DrugDetail = {
     reexamExpiry: string;
   };
   outOfPocket: {
-    rates: { label: string; amount: number; capLabel?: string }[];
+    rates: { label: string; pct: number; amount: number; capLabel?: string }[];
     note: string;
+    unitLabel: string;
+    dailyDoseCount: number;
+    frequencyPerDay: number;
+    defaultDays: number;
   };
 
   genericsListed: boolean;
@@ -81,9 +85,21 @@ export type DrugDetail = {
 
   sameClassComparison: {
     categoryLabel: string;
+    categoryCode: string;
     ingredientCount: number;
     priceLow: number;
     priceHigh: number;
+    infoNote: string;
+    rows: {
+      ingredientName: string;
+      productName: string;
+      price: number;
+      badge?: string;
+      inclusionNote: string;
+    }[];
+    otherDosageFormsCount: number;
+    otherDosageFormsLabel: string;
+    footnote: string;
   };
 
   genericSwitch?: {
@@ -157,11 +173,15 @@ export const alpinySuppositories100: DrugDetail = {
   },
   outOfPocket: {
     rates: [
-      { label: "۳۰٪ سهم بیمار", amount: 194 },
-      { label: "۲۰٪ سهم بیمار", amount: 130 },
-      { label: "۱۰٪ سهم بیمار", amount: 65 },
+      { label: "۳۰٪ سهم بیمار", pct: 30, amount: 194 },
+      { label: "۲۰٪ سهم بیمار", pct: 20, amount: 130 },
+      { label: "۱۰٪ سهم بیمار", pct: 10, amount: 65 },
     ],
     note: "یک بار در روز، یک عدد در هر نوبت، مصرف ۳۰ روزه. تنها هزینه دارو محاسبه شده و هزینه خدمات فنی لحاظ نشده است.",
+    unitLabel: "عدد",
+    dailyDoseCount: 1,
+    frequencyPerDay: 1,
+    defaultDays: 30,
   },
   genericsListed: true,
   lowestGenericBanner: { price: 21.6, diffPercent: 0, diffAmount: 0 },
@@ -190,9 +210,24 @@ export const alpinySuppositories100: DrugDetail = {
   ],
   sameClassComparison: {
     categoryLabel: "ضدتب و ضددرد (پایه استامینوفن)",
+    categoryCode: "1141",
     ingredientCount: 1,
     priceLow: 21.6,
     priceHigh: 21.6,
+    infoNote:
+      "محصولات اصلی همین طبقه‌بندی درمانی به ترتیب تازه‌ترین تاریخ فهرست‌شدن به‌عنوان نقطه مرجع در ارزیابی قیمت دارو نمایش داده می‌شوند (داروهای خوراکی بالاتر فهرست شده‌اند و محصول نماینده هر ماده مؤثره نشان داده می‌شود). مقایسه مستقیم قیمت‌ها صرفاً جنبه مرجع دارد، چون مشخصات و روش مصرف متفاوت است.",
+    rows: [
+      {
+        ingredientName: "استامینوفن",
+        productName: "شیاف آلپینی ۱۰۰",
+        price: 21.6,
+        inclusionNote: "فهرست‌شده پیش از آوریل ۲۰۱۶",
+      },
+    ],
+    otherDosageFormsCount: 0,
+    otherDosageFormsLabel: "سایر اشکال دارویی",
+    footnote:
+      "*محصول نماینده (ارزان‌ترین محصول اصلی) برای هر ماده مؤثره نمایش داده می‌شود. اطلاعات محاسبه از «فهرست داروهای جدید» شورای بیمه پزشکی اجتماعی مرکزی است (فقط موارد فهرست‌شده در سال‌های اخیر). تغییر ماده مؤثره نیازمند تغییر نسخه پزشک است.",
   },
   genericSwitch: {
     availabilityNote: "محصول جایگزین در بازار موجود است (در حال حاضر تنها محصول)",
@@ -316,11 +351,15 @@ export const calkensCapsules100mg: DrugDetail = {
   },
   outOfPocket: {
     rates: [
-      { label: "۳۰٪ سهم بیمار", amount: 105351, capLabel: "سقف حداکثری" },
-      { label: "۲۰٪ سهم بیمار", amount: 70234, capLabel: "سقف حداکثری" },
-      { label: "۱۰٪ سهم بیمار", amount: 35117, capLabel: "سقف حداکثری" },
+      { label: "۳۰٪ سهم بیمار", pct: 30, amount: 105351, capLabel: "سقف حداکثری" },
+      { label: "۲۰٪ سهم بیمار", pct: 20, amount: 70234, capLabel: "سقف حداکثری" },
+      { label: "۱۰٪ سهم بیمار", pct: 10, amount: 35117, capLabel: "سقف حداکثری" },
     ],
     note: "یک بار در روز، یک کپسول در هر نوبت، مصرف ۳۰ روزه. تنها هزینه دارو محاسبه شده و هزینه خدمات فنی لحاظ نشده است.",
+    unitLabel: "کپسول",
+    dailyDoseCount: 1,
+    frequencyPerDay: 1,
+    defaultDays: 30,
   },
 
   genericsListed: false,
@@ -349,9 +388,77 @@ export const calkensCapsules100mg: DrugDetail = {
   ],
   sameClassComparison: {
     categoryLabel: "داروهای ضدسرطان (شامل داروهای هدف مولکولی)",
+    categoryCode: "4291",
     ingredientCount: 20,
     priceLow: 107.5,
     priceHigh: 1072335,
+    infoNote:
+      "محصولات اصلی همین طبقه‌بندی درمانی به ترتیب تازه‌ترین تاریخ فهرست‌شدن به‌عنوان نقطه مرجع در ارزیابی قیمت دارو نمایش داده می‌شوند (داروهای خوراکی بالاتر فهرست شده‌اند و محصول نماینده هر ماده مؤثره نشان داده می‌شود). مقایسه مستقیم قیمت‌ها صرفاً جنبه مرجع دارد، چون مشخصات و روش مصرف متفاوت است.",
+    rows: [
+      {
+        ingredientName: "ایکسازومیب سیترات",
+        productName: "کپسول نینلارو ۰.۵ میلی‌گرم",
+        price: 24023.7,
+        badge: "مشوق توسعه داروی جدید",
+        inclusionNote: "افزوده‌شده در ۲۰۲۴",
+      },
+      {
+        ingredientName: "اکسیتینیب",
+        productName: "قرص اینلیتا ۱ میلی‌گرم",
+        price: 1446.3,
+        inclusionNote: "افزوده‌شده در ۲۰۲۴",
+      },
+      {
+        ingredientName: "آسیمینیب هیدروکلراید",
+        productName: "قرص سمبریکس ۲۰ میلی‌گرم",
+        price: 4729.8,
+        badge: "مشوق توسعه داروی جدید",
+        inclusionNote:
+          "فهرست‌شده در ۲۰۲۲ - روش مقایسه اثربخشی داروی مشابه (نوع I) (داروی مقایسه‌ای: بوسوتینیب هیدرات)",
+      },
+      {
+        ingredientName: "آپالوتامید",
+        productName: "قرص ارلیدا ۶۰ میلی‌گرم",
+        price: 2022.7,
+        inclusionNote: "منتشرشده در ۲۰۱۹",
+      },
+      {
+        ingredientName: "آبماسیکلیب",
+        productName: "قرص ورزنیو ۵۰ میلی‌گرم",
+        price: 3049.7,
+        badge: "مشوق توسعه داروی جدید",
+        inclusionNote: "منتشرشده در ۲۰۱۸",
+      },
+      {
+        ingredientName: "آلکتینیب هیدروکلراید",
+        productName: "کپسول آلکنسا ۱۵۰ میلی‌گرم",
+        price: 6905.5,
+        badge: "مشوق توسعه داروی جدید",
+        inclusionNote: "منتشرشده در ۲۰۱۵",
+      },
+      {
+        ingredientName: "آبیراترون استات",
+        productName: "قرص زایتیگا ۲۵۰ میلی‌گرم",
+        price: 3230.9,
+        inclusionNote: "منتشرشده در ۲۰۱۴",
+      },
+      {
+        ingredientName: "آفاتینیب مالئات",
+        productName: "قرص جیوتریف ۲۰ میلی‌گرم",
+        price: 4205.8,
+        inclusionNote: "منتشرشده در ۲۰۱۴",
+      },
+      {
+        ingredientName: "آناستروزول",
+        productName: "قرص آریمیدکس ۱ میلی‌گرم",
+        price: 107.5,
+        inclusionNote: "منتشرشده در ۲۰۰۱",
+      },
+    ],
+    otherDosageFormsCount: 11,
+    otherDosageFormsLabel: "داروهای تزریقی",
+    footnote:
+      "*محصول نماینده (ارزان‌ترین محصول اصلی) برای هر ماده مؤثره نمایش داده می‌شود. اطلاعات محاسبه از «فهرست داروهای جدید» شورای بیمه پزشکی اجتماعی مرکزی است (فقط موارد فهرست‌شده در سال‌های اخیر). تغییر ماده مؤثره نیازمند تغییر نسخه پزشک است.",
   },
 
   calculationInfo: {
