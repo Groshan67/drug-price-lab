@@ -133,7 +133,7 @@ prisma/
 `prisma/schema.prisma` بازنویسی شد تا دقیقاً با ساختار پاسخ‌های واقعی API مرجع (فایل
 `lab-endpoint.txt` که ارسال کردید) هم‌خوان باشد. تصمیم‌های کلیدی طراحی:
 
-- **`Drug`** حالا فیلدهای واقعی مثل `drugType` (先発品/後発品)، `route` (内用薬/外用薬/注射薬)،
+- **`Drug`** حالا فیلدهای واقعی مثل `drugType` (brandedDrug/genericDrugOral)، `route` (medication/topicalMedication/injectableMedication)،
   `hasGeAlt`، `narcotic`، `gracePeriod`، `fusansanDates`، `pmpSummary`, `pmpHistory`, `outlook`
   و `touitsuCurrent`/`touitsuMembers` (گروه‌بندی نام یکپارچه) را دارد.
 - **`PriceRevision`** حالا `reasonMechanism`, `reasonCitation`, `midyear*`, `pmp*`, `touitsu*`
