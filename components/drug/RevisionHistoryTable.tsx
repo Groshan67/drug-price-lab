@@ -1,6 +1,9 @@
+"use client";
+
 import { Download, ChevronLeft } from "lucide-react";
 import type { DrugDetail, PriceRevisionRow } from "@/lib/data/drug-detail";
 import { cn } from "@/lib/utils";
+import { downloadCsv } from "@/lib/utils/csv";
 
 const reasonBadge: Record<PriceRevisionRow["reason"], { label: string; tone: string } | null> = {
   lowest: { label: "کمترین قیمت دارو", tone: "bg-emerald-soft text-emerald" },
@@ -11,6 +14,19 @@ const reasonBadge: Record<PriceRevisionRow["reason"], { label: string; tone: str
 };
 
 export default function RevisionHistoryTable({ drug }: { drug: DrugDetail }) {
+  function handleExportCsv() {
+    downloadCsv(
+      `${drug.slug}-revision-history`,
+      ["تاریخ بازنگری", "قیمت دارو (ین)", "درصد تغییر", "دلیل بازنگری"],
+      drug.revisionHistory.map((r) => [
+        r.date,
+        r.price,
+        r.changePercent ?? "",
+        r.reason !== "none" ? reasonBadge[r.reason]?.label ?? "" : "",
+      ])
+    );
+  }
+
   return (
     <section id="revision-history" className="px-4 mt-4 scroll-mt-20">
       <div className="mx-auto max-w-5xl rounded-xl2 border border-line bg-card p-5 shadow-card">
@@ -22,7 +38,10 @@ export default function RevisionHistoryTable({ drug }: { drug: DrugDetail }) {
               <ChevronLeft className="h-3 w-3" />
             </a>
           </div>
-          <button className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-emerald hover:bg-emerald-soft transition-colors shrink-0">
+          <button
+            onClick={handleExportCsv}
+            className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-emerald hover:bg-emerald-soft transition-colors shrink-0"
+          >
             <Download className="h-3.5 w-3.5" />
             خروجی CSV
           </button>

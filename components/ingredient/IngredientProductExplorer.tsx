@@ -1,9 +1,10 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Download, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { downloadCsv } from "@/lib/utils/csv";
 import type { IngredientPageData, IngredientProductRow } from "@/lib/data/ingredient-page";
 
 type ClassificationFilter = "all" | "original" | "generic";
@@ -15,6 +16,7 @@ const classificationLabel: Record<IngredientProductRow["classification"], string
 };
 
 export default function IngredientProductExplorer({ data }: { data: IngredientPageData }) {
+  const router = useRouter();
   const [classificationFilter, setClassificationFilter] = useState<ClassificationFilter>("all");
   const [sortBy, setSortBy] = useState<SortBy>("classification");
   const [brandFilter, setBrandFilter] = useState<string>("all");
@@ -52,6 +54,28 @@ export default function IngredientProductExplorer({ data }: { data: IngredientPa
     }
     return groups;
   }, [filtered, sortBy]);
+
+  function handleExportCsv() {
+    downloadCsv(
+      `${data.slug}-products`,
+      ["نام محصول", "مشخصات", "شرکت سازنده", "طبقه‌بندی", "قیمت دارو (ین)", "بازنگری قبلی (ین)", "درصد تغییر"],
+      filtered.map((p) => [
+        p.name,
+        p.spec,
+        p.manufacturer,
+        classificationLabel[p.classification],
+        p.price,
+        p.prevPrice ?? "",
+        p.changePercent ?? "",
+      ])
+    );
+  }
+
+  function handleCopyWithSource() {
+    const lines = filtered.map((p) => `${p.name}: ${p.price.toLocaleString("fa-IR")} ین`);
+    const text = `${data.name}\n${lines.join("\n")}\nمنبع: ${data.revisionLabel}`;
+    navigator.clipboard?.writeText(text).catch(() => {});
+  }
 
   return (
     <section className="px-4 mt-4">
@@ -97,11 +121,17 @@ export default function IngredientProductExplorer({ data }: { data: IngredientPa
                 </button>
               ))}
             </div>
-            <button className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-emerald hover:bg-emerald-soft transition-colors">
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-emerald hover:bg-emerald-soft transition-colors"
+            >
               <Download className="h-3.5 w-3.5" />
               CSV
             </button>
-            <button className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft hover:border-brand/40 hover:text-brand transition-colors">
+            <button
+              onClick={handleCopyWithSource}
+              className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft hover:border-brand/40 hover:text-brand transition-colors"
+            >
               <Copy className="h-3.5 w-3.5" />
               کپی همراه با منبع
             </button>
@@ -163,12 +193,12 @@ export default function IngredientProductExplorer({ data }: { data: IngredientPa
                     </tr>
                   )}
                   {group.rows.map((p) => (
-                    <tr key={p.slug}>
-                      <td className="py-3">
-                        <Link href={`/drug/${p.slug}`} className="font-medium text-brand hover:underline">
-                          {p.name}
-                        </Link>
-                      </td>
+                    <tr
+                      key={p.slug}
+                      onClick={() => router.push(`/drug/${p.slug}`)}
+                      className="cursor-pointer hover:bg-brand-soft/50 transition-colors"
+                    >
+                      <td className="py-3 font-medium text-brand">{p.name}</td>
                       <td className="py-3 text-ink-soft">{p.spec}</td>
                       <td className="py-3 text-ink-soft">{p.manufacturer}</td>
                       <td className="py-3">

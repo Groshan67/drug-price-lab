@@ -1,8 +1,20 @@
+"use client";
+
 import { Download, ChevronDown } from "lucide-react";
 import type { DrugDetail } from "@/lib/data/drug-detail";
 import { cn } from "@/lib/utils";
+import { downloadCsv } from "@/lib/utils/csv";
 
 export default function GenericProductsTable({ drug }: { drug: DrugDetail }) {
+  function handleExportCsv() {
+    if (!drug.genericsListed) return;
+    downloadCsv(
+      `${drug.slug}-generics`,
+      ["نام محصول", "شرکت سازنده", "قیمت دارو (ین)", "نسبت پیشگام"],
+      drug.genericProducts.map((p) => [p.name, p.manufacturer ?? "", p.price, p.startingRatio])
+    );
+  }
+
   if (!drug.genericsListed) {
     return (
       <section className="px-4 mt-4">
@@ -44,7 +56,10 @@ export default function GenericProductsTable({ drug }: { drug: DrugDetail }) {
               مرتب‌سازی: ارزان‌ترین
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
-            <button className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-emerald hover:bg-emerald-soft transition-colors">
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-emerald hover:bg-emerald-soft transition-colors"
+            >
               <Download className="h-3.5 w-3.5" />
               خروجی CSV
             </button>

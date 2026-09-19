@@ -18,17 +18,17 @@ const config: Config = {
         line: "#E4E8F0",
         card: "#FFFFFF",
         brand: {
-          DEFAULT: "#3552D6",
-          soft: "#EEF1FD",
-          dark: "#233A9E",
+          DEFAULT: "#1a6fd4",
+          soft: "#EAF3FD",
+          dark: "#15599f",
         },
         plum: {
           DEFAULT: "#7C3AED",
           soft: "#F4EEFE",
         },
         emerald: {
-          DEFAULT: "#0F9D6D",
-          soft: "#E9F8F1",
+          DEFAULT: "#0f8a6a",
+          soft: "#E6F5F1",
         },
         gold: {
           DEFAULT: "#B7860B",

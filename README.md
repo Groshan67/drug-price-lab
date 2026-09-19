@@ -1,4 +1,4 @@
-# دارونما (yakka-fa)
+# RxPrice Lab (yakka-fa)
 
 نسخه فارسی و راست‌چین پلتفرم قیمت دارو — Next.js 14 + TypeScript + Tailwind + PostgreSQL (Prisma) + Meilisearch.
 

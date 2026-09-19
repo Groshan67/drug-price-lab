@@ -21,10 +21,10 @@ function CustomDot(props: any) {
   const { cx, cy, payload } = props;
   if (payload?.hollow) {
     return (
-      <circle cx={cx} cy={cy} r={4} fill="white" stroke="#3552D6" strokeWidth={2} />
+      <circle cx={cx} cy={cy} r={4} fill="white" stroke="#1a6fd4" strokeWidth={2} />
     );
   }
-  return <circle cx={cx} cy={cy} r={4} fill="#3552D6" />;
+  return <circle cx={cx} cy={cy} r={4} fill="#1a6fd4" />;
 }
 
 export default function PriceTrendChart({
@@ -141,7 +141,7 @@ export default function PriceTrendChart({
               <Line
                 type="monotone"
                 dataKey="display"
-                stroke="#3552D6"
+                stroke="#1a6fd4"
                 strokeWidth={2}
                 dot={<CustomDot />}
                 activeDot={{ r: 5 }}

@@ -4,11 +4,20 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, Download } from "lucide-react";
 import type { DrugDetail } from "@/lib/data/drug-detail";
 import { cn } from "@/lib/utils";
+import { downloadCsv } from "@/lib/utils/csv";
 
 export default function SameClassComparisonCard({ drug }: { drug: DrugDetail }) {
   const [expanded, setExpanded] = useState(false);
   const [showOtherForms, setShowOtherForms] = useState(false);
   const s = drug.sameClassComparison;
+
+  function handleExportCsv() {
+    downloadCsv(
+      `${drug.slug}-same-class`,
+      ["نام ماده مؤثره", "محصول نماینده", "قیمت دارو (ین)", "فهرست‌شدن و محاسبه"],
+      s.rows.map((row) => [row.ingredientName, row.productName, row.price, row.inclusionNote])
+    );
+  }
 
   return (
     <section className="px-4 mt-4">
@@ -57,7 +66,10 @@ export default function SameClassComparisonCard({ drug }: { drug: DrugDetail }) 
                 {s.categoryLabel}{" "}
                 <span className="text-ink-faint font-normal">کد طبقه‌بندی: {s.categoryCode}</span>
               </span>
-              <button className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-emerald hover:bg-emerald-soft transition-colors">
+              <button
+                onClick={handleExportCsv}
+                className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-emerald hover:bg-emerald-soft transition-colors"
+              >
                 <Download className="h-3.5 w-3.5" />
                 خروجی CSV
               </button>

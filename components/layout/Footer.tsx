@@ -35,7 +35,7 @@ export default function Footer() {
     <footer className="mt-16 border-t border-line bg-card">
       <div className="mx-auto max-w-6xl px-5 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
         <div className="col-span-2 sm:col-span-1">
-          <p className="font-bold mb-2">دارونما</p>
+          <p className="font-bold mb-2"><span className="text-brand">RxPrice</span> <span className="text-emerald">Lab</span></p>
           <p className="text-sm text-ink-faint leading-6">
             پایگاه داده رایگان و فارسی قیمت دارو، بر اساس اسناد رسمی. {siteStats.totalItems.toLocaleString("fa-IR")} قلم فهرست‌شده.
           </p>
@@ -57,7 +57,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-line">
         <div className="mx-auto max-w-6xl px-5 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-ink-faint">
-          <p>© {new Date().getFullYear()} دارونما — به‌طور مستقل توسعه یافته، بدون ارائه مشاوره پزشکی یا نسخه.</p>
+          <p>© {new Date().getFullYear()} RxPrice Lab — به‌طور مستقل توسعه یافته، بدون ارائه مشاوره پزشکی یا نسخه.</p>
           <p>آخرین به‌روزرسانی داده‌ها: {siteStats.lastUpdated}</p>
         </div>
       </div>

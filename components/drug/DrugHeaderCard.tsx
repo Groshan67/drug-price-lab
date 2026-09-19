@@ -1,7 +1,11 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, Star, AlertCircle } from "lucide-react";
 import type { DrugDetail } from "@/lib/data/drug-detail";
 import { cn } from "@/lib/utils";
+import { useSiteChrome } from "@/lib/context/site-chrome";
 
 const supplyToneMap = {
   A: "bg-emerald-soft text-emerald",
@@ -10,6 +14,29 @@ const supplyToneMap = {
 } as const;
 
 export default function DrugHeaderCard({ drug }: { drug: DrugDetail }) {
+  const { isWatched, toggleWatchlist } = useSiteChrome();
+  const watched = isWatched(drug.slug);
+
+  function handleToggle() {
+    toggleWatchlist({ slug: drug.slug, name: drug.name, price: drug.currentPrice });
+  }
+
+  // شورت‌کات کلید F برای افزودن/حذف این دارو از لیست پیگیری
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      const isTyping =
+        target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+      if ((e.key === "f" || e.key === "F") && !isTyping && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        handleToggle();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drug.slug, watched]);
+
   return (
     <section className="px-4 pt-6">
       <div className="mx-auto max-w-5xl">
@@ -39,11 +66,17 @@ export default function DrugHeaderCard({ drug }: { drug: DrugDetail }) {
 
           <button
             type="button"
-            className="flex flex-col items-center gap-0.5 rounded-xl border border-line bg-card px-4 py-2 text-xs text-ink-soft hover:border-gold/50 hover:text-gold transition-colors shrink-0"
+            onClick={handleToggle}
+            className={cn(
+              "flex flex-col items-center gap-0.5 rounded-xl border px-4 py-2 text-xs transition-colors shrink-0",
+              watched
+                ? "border-gold/40 bg-gold-soft text-gold"
+                : "border-line bg-card text-ink-soft hover:border-gold/50 hover:text-gold"
+            )}
           >
             <span className="flex items-center gap-1.5 font-medium">
-              <Star className="h-3.5 w-3.5" />
-              افزودن به لیست پیگیری
+              <Star className={cn("h-3.5 w-3.5", watched && "fill-gold")} />
+              {watched ? "در لیست پیگیری" : "افزودن به لیست پیگیری"}
             </span>
             <span className="text-[10px] text-ink-faint">
               اطلاع‌رسانی در زمان بازنگری (کلید F)

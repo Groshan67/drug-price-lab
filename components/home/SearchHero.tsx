@@ -1,28 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { siteStats, searchExamples } from "@/lib/data/mock";
 
 export default function SearchHero() {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement;
-      const isTyping =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-      if (e.key === "/" && !isTyping) {
-        e.preventDefault();
-        inputRef.current?.focus();
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   return (
     <section className="text-center pt-10 pb-8 px-4">
       <h1 className="text-xl sm:text-2xl font-bold leading-relaxed max-w-2xl mx-auto">
@@ -42,9 +23,8 @@ export default function SearchHero() {
       >
         <div className="relative">
           <input
-            ref={inputRef}
             type="text"
-            placeholder="جستجو بر اساس نام دارو، نام ماده مؤثره یا کد YJ (کلید / برای جستجو)"
+            placeholder="جستجو بر اساس نام دارو، نام ماده مؤثره یا کد IRC"
             className="w-full rounded-full border border-line bg-card py-3.5 pr-5 pl-14 text-sm shadow-card outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-shadow"
           />
           <button

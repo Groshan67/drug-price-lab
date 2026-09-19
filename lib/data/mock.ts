@@ -2,7 +2,7 @@
 
 export const siteStats = {
   totalItems: 12315,
-  lastUpdated: "۱۵ آوریل ۲۰۲۶",
+  lastUpdated: "۱۵ شهریور ۱۴۰۵",
 };
 
 export const highlights = [
@@ -153,5 +153,5 @@ export const keyIngredients = [
 export const searchExamples = [
   { label: "آملودیپین", hint: "نام ماده مؤثره" },
   { label: "نورواسک", hint: "نام محصول" },
-  { label: "1140010F1024", hint: "کد YJ" },
+  { label: "1140010F1024", hint: "کد IRC" },
 ];
